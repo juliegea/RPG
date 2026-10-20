@@ -1,0 +1,9 @@
+Copiar en esta carpeta los sprites del juego, por ejemplo:
+
+guerrero.png
+mago.png
+brujo.png
+elfo.png
+
+El nombre del archivo se pasa en el campo "sprite" del EntidadDTO.
+Si el archivo no existe, PanelSprite muestra el nombre de la entidad.
