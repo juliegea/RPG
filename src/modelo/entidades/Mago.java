@@ -22,4 +22,9 @@ public class Mago extends Personaje {
 	public int getInteligencia() {
 		return inteligencia;
 	}
+	
+	@Override
+	public int bonusHabilidad() {
+	    return inteligencia;
+	}
 }

@@ -74,12 +74,23 @@ public abstract class Entidad {
 	}
 
 	public int recibirAtaque(int poderAtaque) {
+		for (EfectoDeEstado e: efectosDeEstado) {
+			if (e.bloqueaDanio()) {
+				e.descontarTurnos();
+				return 0;	
+			}
+		}
 		int danio = poderAtaque - (defensaEfectiva() / 2);
 		if (danio < 1) {
 			danio = 1;
 		}
 		vidaActual -= danio;
 
+		return danio;
+	}
+	
+	public int recibirDanio(int danio) {
+		vidaActual -= danio;
 		return danio;
 	}
 
@@ -136,7 +147,11 @@ public abstract class Entidad {
 	}
 
 	public int multiplicarCuracion() {
-		return 0;
+		return 1;
+	}
+	
+	public int bonusHabilidad() {
+	    return 0;
 	}
 
 	public void limpiarEstadosNegativos() {
