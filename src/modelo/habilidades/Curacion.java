@@ -12,12 +12,13 @@ public class Curacion extends Efecto {
 
 	@Override
 	public int aplicarEfecto(Entidad origen, List<Entidad> objetivos) {
-		int potenciaFinal = (getPotencia() * origen.multiplicarCuracion());
 		int total = 0;
 		for (Entidad o: objetivos) {
+			int potenciaFinal = ((o.getVidaMaxima() * getPotencia()/100) * origen.multiplicarCuracion());
 			if (o.estaViva()) {
+				int vidaAntes = o.getVidaActual();
 				o.curar(potenciaFinal);
-				total += potenciaFinal;
+				total += o.getVidaActual() - vidaAntes;
 			}
 		}
 		return total;

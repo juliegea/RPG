@@ -3,11 +3,7 @@ package app;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.SwingUtilities;
-
-
 import controlador.ControladorBatalla;
-import modelo.acciones.Atacar;
 import modelo.combate.Batalla;
 import modelo.combate.Party;
 import modelo.entidades.Arquero;
@@ -16,11 +12,18 @@ import modelo.entidades.Curador;
 import modelo.entidades.Demonio;
 import modelo.entidades.Elfo;
 import modelo.entidades.Enemigo;
-import modelo.entidades.Entidad;
 import modelo.entidades.Guerrero;
 import modelo.entidades.Hechicera;
 import modelo.entidades.Mago;
 import modelo.entidades.Personaje;
+import modelo.habilidades.AplicarEstado;
+import modelo.habilidades.Curacion;
+import modelo.habilidades.Danio;
+import modelo.habilidades.DanioPorTurno;
+import modelo.habilidades.Escudo;
+import modelo.habilidades.Habilidad;
+import modelo.habilidades.LimpiarEstados;
+import modelo.habilidades.TipoObjetivo;
 import vista.PantallaBatalla;
 
 /**
@@ -52,6 +55,42 @@ public class Main {
     	integrantes.add(guerrero);
     	
     	Party party = new Party(integrantes);
+    	
+    	// Guerrero
+    	Habilidad golpeContraElPiso = new Habilidad("Golpe contra el piso", 30, 3, TipoObjetivo.ENEMIGO, new Danio(45));
+    	guerrero.agregarHabilidad(golpeContraElPiso);
+
+    	// Mago
+    	Habilidad descargaArcana = new Habilidad("Descarga Arcana", 40, 1, TipoObjetivo.ENEMIGO, new Danio(80));
+    	mago.agregarHabilidad(descargaArcana);
+
+    	Habilidad agujeroNegro = new Habilidad("Agujero Negro", 160, 4, TipoObjetivo.ENEMIGO, new Danio(200));
+    	mago.agregarHabilidad(agujeroNegro);
+
+    	// Arquero
+    	Habilidad flechaDeAcero = new Habilidad("Flecha de acero", 30, 1, TipoObjetivo.ENEMIGO, new Danio(70));
+    	arquero.agregarHabilidad(flechaDeAcero);
+
+    	Habilidad caceria = new Habilidad("Cacería", 70, 3, TipoObjetivo.ENEMIGO, new Danio(60));
+    	arquero.agregarHabilidad(caceria);
+
+    	Habilidad flechaDeSerpiente = new Habilidad("Flecha de Serpiente", 50, 1, TipoObjetivo.ENEMIGO,
+    	        new AplicarEstado(new DanioPorTurno("Veneno", 5, 4)));
+    	arquero.agregarHabilidad(flechaDeSerpiente);
+
+    	Habilidad flechaIncendiaria = new Habilidad("Flecha Incendiaria", 35, 1, TipoObjetivo.ENEMIGO,
+    	        new AplicarEstado(new DanioPorTurno("Quemadura", 7, 4)));
+    	arquero.agregarHabilidad(flechaIncendiaria);
+
+    	// Curador
+    	Habilidad luzSanadora = new Habilidad("Luz Sanadora", 35, 1, TipoObjetivo.ALIADO, new Curacion(15));
+    	curador.agregarHabilidad(luzSanadora);
+
+    	Habilidad escudoSagrado = new Habilidad("Escudo Sagrado", 80, 1, TipoObjetivo.ALIADO, new AplicarEstado(new Escudo(0, 1)));
+    	curador.agregarHabilidad(escudoSagrado);
+
+    	Habilidad purificacion = new Habilidad("Purificación", 70, 1, TipoObjetivo.ALIADO, new LimpiarEstados());
+    	curador.agregarHabilidad(purificacion);
    
     	
     	Brujo brujo = new Brujo("Brujo", 1, 180, 200, 45, 25, 45, 80, 450);
@@ -66,6 +105,9 @@ public class Main {
     	enemigos.add(hechicera);
     	
     	Batalla batalla = new Batalla(party, enemigos);
+    	
+    	Habilidad curacionHechicera = new Habilidad("Curación", 40, 1, TipoObjetivo.ALIADO, new Curacion(15));
+    	hechicera.agregarHabilidad(curacionHechicera);
     	
     	batalla.iniciar();
     	

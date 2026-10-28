@@ -1,7 +1,6 @@
 package modelo.habilidades;
 
 import java.util.List;
-
 import modelo.entidades.Entidad;
 
 public class Habilidad {
@@ -32,6 +31,10 @@ public class Habilidad {
 	
 	public TipoObjetivo getTipoObjetivo() {
 		return tipoObjetivo;
+	}
+	
+	public int getAlcance() {
+		return alcance;
 	}
 	
 	@Override

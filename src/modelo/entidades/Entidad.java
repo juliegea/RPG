@@ -57,6 +57,10 @@ public abstract class Entidad {
 	public int getVelocidad() {
 		return velocidad;
 	}
+	
+	public List<Habilidad> getHabilidad() {
+		return habilidades;
+	}
 
 	public Entidad(String nombre, int nivel, int vidaMaxima, int manaMaximo, int ataque, int defensa, int velocidad) {
 		this.nombre = nombre;
@@ -85,12 +89,19 @@ public abstract class Entidad {
 			danio = 1;
 		}
 		vidaActual -= danio;
+		
+		if (vidaActual < 0) {
+			vidaActual = 0;
+		}
 
 		return danio;
 	}
 	
 	public int recibirDanio(int danio) {
 		vidaActual -= danio;
+		if (vidaActual < 0) {
+			vidaActual = 0;
+		}
 		return danio;
 	}
 
@@ -119,6 +130,9 @@ public abstract class Entidad {
 	}
 
 	public int usarHabilidad(Habilidad habilidad, List<Entidad> objetivos) {
+		if (consumirMana(habilidad.getCostoMana())) {
+			return habilidad.aplicarHabilidad(this, objetivos);
+		}
 		return 0;
 	}
 
@@ -136,9 +150,22 @@ public abstract class Entidad {
 	public int calcularDanioBase() {
 		return ataqueEfectivo();
 	}
+	
+	public void aplicarEstado(EfectoDeEstado estado) {
+		efectosDeEstado.add(estado);
+	}
 
 	public void procesarEstados() {
 		defendiendo = false;
+		List<EfectoDeEstado> expirados = new ArrayList<>();
+		for (EfectoDeEstado e: efectosDeEstado) {
+			e.aplicarEfectoEstado(this);
+			e.descontarTurnos();
+			if (e.expiroEfecto()) {
+				expirados.add(e);	
+			}
+		}
+		efectosDeEstado.removeAll(expirados);
 
 	}
 
@@ -155,7 +182,25 @@ public abstract class Entidad {
 	}
 
 	public void limpiarEstadosNegativos() {
-
+		List<EfectoDeEstado> negativos = new ArrayList<>();
+		for (EfectoDeEstado e: efectosDeEstado) {
+			if (e.esNegativo()) {
+				negativos.add(e);	
+			}
+		}
+		efectosDeEstado.removeAll(negativos);
+	}
+	
+	public List<String> mostrarNombreEstados() {
+		List<String> nombresEstados = new ArrayList<>();
+		for (EfectoDeEstado e: efectosDeEstado) {
+			nombresEstados.add(e.getNombre());
+		}
+		return nombresEstados;
+	}
+	
+	public void agregarHabilidad(Habilidad habilidad) {
+			habilidades.add(habilidad);
 	}
 	
 	@Override
