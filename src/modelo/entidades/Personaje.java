@@ -27,12 +27,16 @@ public abstract class Personaje extends Entidad {
 		
 	}
 	
-	public void usarObjeto(Item objeto) {
-		
+	public void usarObjeto(Equipable equipo) {
+	    this.equipo.add(equipo);
 	}
 
-	public void desequiparObjeto(Item objeto) {
-		
+	public void desequiparObjeto(Equipable equipo) {
+	    this.equipo.remove(equipo);
+	}
+
+	public List<Equipable> getEquipo() {
+	    return equipo;
 	}
 	
 	private void subirNivel() {
@@ -46,6 +50,27 @@ public abstract class Personaje extends Entidad {
 	
 	public int getExperiencia() {
 		return experiencia;
+	}
+	
+	@Override
+	protected int ataqueEfectivo() {
+	    int total = ataque;
+	    for (Equipable e : equipo) {
+	        total += e.getBonoAtaque();
+	    }
+	    return total;
+	}
+
+	@Override
+	protected int defensaEfectiva() {
+	    int total = defensa;
+	    for (Equipable e : equipo) {
+	        total += e.getBonoDefensa();
+	    }
+	    if (defendiendo) {
+	        total = total * 3 / 2;
+	    }
+	    return total;
 	}
 	
 }

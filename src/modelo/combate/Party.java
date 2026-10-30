@@ -15,6 +15,7 @@ public class Party {
 	public Party(List<Personaje> personajes) {
 		this.personajes = personajes;
 		this.oroTotal = 0;
+		this.inventario = new Inventario(new ArrayList<>());
 	}
 	
 	public boolean partyDerrotada() {

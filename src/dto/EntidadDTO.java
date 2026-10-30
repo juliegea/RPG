@@ -27,6 +27,10 @@ public class EntidadDTO {
     private final List<String> estados;
 
     private final String sprite;
+    
+    private final int bonoAtaque;
+    private final int bonoDefensa;
+    private final int bonoVelocidad;
 
     public EntidadDTO(
             String nombre,
@@ -39,7 +43,10 @@ public class EntidadDTO {
             int defensa,
             int velocidad,
             List<String> estados,
-            String sprite) {
+            String sprite, 
+    		int bonoAtaque, 
+    		int bonoDefensa, 
+    		int bonoVelocidad) {
 
         this.nombre = nombre;
         this.nivel = nivel;
@@ -57,6 +64,12 @@ public class EntidadDTO {
         this.estados = estados;
 
         this.sprite = sprite;
+        
+        this.bonoAtaque = bonoAtaque;
+        
+        this.bonoDefensa = bonoDefensa;
+        
+        this.bonoVelocidad = bonoVelocidad;
     }
 
     public String getNombre() {
@@ -102,4 +115,8 @@ public class EntidadDTO {
     public String getSprite() {
         return sprite;
     }
+    
+    public int getBonoAtaque() { return bonoAtaque; }
+    public int getBonoDefensa() { return bonoDefensa; }
+    public int getBonoVelocidad() { return bonoVelocidad; }
 }

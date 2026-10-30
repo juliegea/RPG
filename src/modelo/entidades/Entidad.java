@@ -17,7 +17,7 @@ public abstract class Entidad {
 	protected int ataque;
 	protected int defensa;
 	protected int velocidad;
-	private boolean defendiendo;
+	protected boolean defendiendo;
 
 	private final List<Habilidad> habilidades;
 	private final List<EfectoDeEstado> efectosDeEstado;
@@ -189,6 +189,10 @@ public abstract class Entidad {
 			}
 		}
 		efectosDeEstado.removeAll(negativos);
+	}
+	
+	public void restaurarMana() { 
+		manaActual = manaMaximo; 
 	}
 	
 	public List<String> mostrarNombreEstados() {

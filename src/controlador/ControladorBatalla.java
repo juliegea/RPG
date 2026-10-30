@@ -12,20 +12,35 @@ import modelo.acciones.Atacar;
 import modelo.acciones.Defender;
 import modelo.acciones.UsarHabilidad;
 import modelo.combate.Batalla;
+import modelo.combate.GeneradorDeBatalla;
+import modelo.combate.Mercado;
 import modelo.combate.Party;
 import modelo.entidades.Enemigo;
 import modelo.entidades.Entidad;
 import modelo.entidades.Personaje;
 import modelo.habilidades.Habilidad;
 import modelo.habilidades.TipoObjetivo;
+import modelo.items.Consumible;
+import vista.DialogoEleccion;
 import vista.PantallaBatalla;
+import vista.PantallaDerrota;
+import vista.PantallaEquipamiento;
+import vista.PantallaMercado;
+import vista.PantallaVictoria;
 
 public class ControladorBatalla {
 
     private final PantallaBatalla vista;
-    private final Batalla batalla;
+    private Batalla batalla;
     private final Party party;
     private String mensaje;
+    private GeneradorDeBatalla generador;
+    private int numeroBatalla;
+    private Mercado mercado;
+    private int oroGanado = 0;
+    private int oroGastado = 0;
+    private int enemigosDerrota = 0;
+    private int muertesParty = 0;
 
     
     public ControladorBatalla(PantallaBatalla vista, Batalla batalla, Party party) {
@@ -33,11 +48,44 @@ public class ControladorBatalla {
     	this.party = party;
         this.vista = vista;
         this.mensaje = "Comienza el combate" + "\n";
+        this.generador = new GeneradorDeBatalla();
+        this.numeroBatalla = 1;
     }
     
     public void iniciar() {
         jugarTurnosEnemigos();
         refrescarVista();
+    }
+    
+    public void setMercado(Mercado mercado) {
+        this.mercado = mercado;
+    }
+
+    private void siguienteBatalla() {
+        for (Personaje p : party.getIntegrantes()) {
+            p.curar(p.getVidaMaxima());
+            p.restaurarMana();
+        }
+
+        boolean esFinal = (numeroBatalla >= 4);
+
+        PantallaVictoria victoria = new PantallaVictoria(
+        	    numeroBatalla, party.getOro(), esFinal,
+        	    enemigosDerrota, muertesParty, oroGanado, oroGastado,
+        	    () -> {
+        	        numeroBatalla++;
+        	        List<Enemigo> nuevos = generador.generarEnemigos(numeroBatalla);
+        	        batalla = new Batalla(party, nuevos);
+        	        batalla.iniciar();
+        	        mensaje = "Batalla " + numeroBatalla + " comienza\n";
+        	        jugarTurnosEnemigos();
+        	        refrescarVista();
+        	    },
+        	    () -> new PantallaMercado(mercado, party).setVisible(true),
+        	    () -> new PantallaEquipamiento(party).setVisible(true),
+        	    () -> System.exit(0)
+        	);
+        victoria.setVisible(true);
     }
 
     public void atacar() {
@@ -52,15 +100,12 @@ public class ControladorBatalla {
         	return;
         }
 
-        Object elegido = JOptionPane.showInputDialog(
-            vista,
-            "¿A quién atacás?",
-            "Elegir objetivo",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            vivos.toArray(),
-            vivos.get(0)
-        );
+        Object elegido = DialogoEleccion.mostrar(
+        	    vista,
+        	    "Elegir objetivo",
+        	    "¿A quién atacás?",
+        	    vivos.toArray()
+        	);
 
         if (elegido == null) {
             return;
@@ -78,6 +123,9 @@ public class ControladorBatalla {
 
             batalla.otorgarExperiencia(muerto, rematador);
             batalla.otorgarOro(muerto, party);
+            
+            enemigosDerrota++;
+            oroGanado += muerto.recompensaOro();
 
             mensaje += muerto.getNombre() + " fue derrotado. "
                     + rematador.getNombre() + " gano "
@@ -90,6 +138,14 @@ public class ControladorBatalla {
         }
         batalla.avanzarTurno();
         jugarTurnosEnemigos();
+        if (batalla.batallaTermino()) {
+            if (batalla.ganadorDeBatalla()) {
+                siguienteBatalla();
+            } else {
+                mostrarDerrota();
+            }
+            return;
+        }
         refrescarVista();
     }
     
@@ -107,6 +163,10 @@ public class ControladorBatalla {
                 mensaje += "El " + batalla.turnoActual().getNombre() + " ataco a " + objetivo.getNombre()
                         + " realizandole " + danio + "Hp de daño. Vida restante: " + objetivo.getVidaActual() + "Hp\n";
             }
+            for (Personaje p : party.getIntegrantes()) {
+                if (!p.estaViva()) muertesParty++;
+            }
+            
             batalla.avanzarTurno();
         }
     }
@@ -116,6 +176,14 @@ public class ControladorBatalla {
     	mensaje = ("El " + batalla.turnoActual().getNombre() + " se esta defendiendo" + "\n");
     	batalla.avanzarTurno();
         jugarTurnosEnemigos();
+        if (batalla.batallaTermino()) {
+            if (batalla.ganadorDeBatalla()) {
+                siguienteBatalla();
+            } else {
+                mostrarDerrota();
+            }
+            return;
+        }
         refrescarVista();
     }
     
@@ -126,15 +194,12 @@ public class ControladorBatalla {
     		return;
     	}
     	
-    	Object seleccion = JOptionPane.showInputDialog(
-                vista,
-                "¿Qué habilidad usás?",
-                "Elegir habilidad",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                habilidades.toArray(),
-                habilidades.get(0)
-            );
+    	Object seleccion = DialogoEleccion.mostrar(
+    		    vista,
+    		    "¿Qué habilidad usás?",
+    		    "Elegir habilidad",
+    		    habilidades.toArray()
+    		);
     	
     	if (seleccion == null) {
     		return;
@@ -157,15 +222,13 @@ public class ControladorBatalla {
             		return;
             	}
             	candidatos.addAll(vivos);
-            	Object elegido = JOptionPane.showInputDialog(
-            	        vista,
-            	        "¿Sobre quién?",
+            	
+            	Object elegido = DialogoEleccion.mostrar(
+            		    vista,
+            		    "¿Sobre quién?",
             	        "Elegir objetivo",
-            	        JOptionPane.QUESTION_MESSAGE,
-            	        null,
-            	        vivos.toArray(),
-            	        vivos.get(0)
-            	    );
+            	        vivos.toArray()
+            		);
             	if (elegido == null) {
             	        return;
                 }
@@ -174,15 +237,13 @@ public class ControladorBatalla {
            	    
        		case ALIADO:
        			candidatos.addAll(party.integrantesVivos());
-       			Object personaje = JOptionPane.showInputDialog(
-       			        vista,
-       			        "¿Sobre quién?",
-       			        "Elegir objetivo",
-       			        JOptionPane.QUESTION_MESSAGE,
-       			        null,
-       			     party.integrantesVivos().toArray(),
-       			     party.integrantesVivos().get(0)
-       			    );
+       			
+       			Object personaje = DialogoEleccion.mostrar(
+            		    vista,
+            		    "¿Sobre quién?",
+            	        "Elegir objetivo",
+            	        party.integrantesVivos().toArray()
+            		);
        			    if (personaje == null) {
        			        return;
        			    }
@@ -204,6 +265,13 @@ public class ControladorBatalla {
     	        objetivos.add(candidatos.get(i));
     	    }
     	}
+    	
+    	List<Entidad> vivosAntes = new ArrayList<>();
+    	for (Entidad o : objetivos) {
+    	    if (o.estaViva()) vivosAntes.add(o);
+    	}
+
+    	
     	int danio = batalla.ejecutarAccion(new UsarHabilidad(habilidad, objetivos), objetivo);
     	if (habilidad.getTipoObjetivo() == TipoObjetivo.ALIADO || habilidad.getTipoObjetivo() == TipoObjetivo.UNO_MISMO) {
     	    mensaje = "El " + batalla.turnoActual().getNombre() + " uso " + habilidad.getNombre()
@@ -213,17 +281,117 @@ public class ControladorBatalla {
     	            + " sobre " + objetivo.getNombre() + " realizandole " + danio + "Hp de daño. Vida restante: "
     	            + objetivo.getVidaActual() + "Hp\n";
     	}
+    	
+    	for (Entidad o : vivosAntes) {
+    	    if (!o.estaViva() && o instanceof Enemigo) {
+    	    	enemigosDerrota++;
+    	        Enemigo muerto = (Enemigo) o;
+    	        Personaje rematador = (Personaje) batalla.turnoActual();
+    	        int nivelAntes = rematador.getNivel();
+    	        batalla.otorgarExperiencia(muerto, rematador);
+    	        batalla.otorgarOro(muerto, party);
+    	        
+    	        enemigosDerrota++;
+    	        oroGanado += muerto.recompensaOro();
+    	        
+    	        mensaje += muerto.getNombre() + " fue derrotado. "
+    	                + rematador.getNombre() + " gano "
+    	                + muerto.recompensaExperiencia() + " exp y la party "
+    	                + muerto.recompensaOro() + " oro\n";
+    	        if (rematador.getNivel() > nivelAntes) {
+    	            mensaje += rematador.getNombre() + " subio al nivel " + rematador.getNivel() + "\n";
+    	        }
+    	    }
+    	}
         batalla.avanzarTurno();
         jugarTurnosEnemigos();
+        if (batalla.batallaTermino()) {
+            if (batalla.ganadorDeBatalla()) {
+                siguienteBatalla();
+            } else {
+                mostrarDerrota();
+            }
+            return;
+        }
         refrescarVista();
     }
 
     public void usarItem() {
+        List<Consumible> consumibles = party.getInventario().filtrarConsumible();
+        if (consumibles.isEmpty()) {
+            return;
+        }
 
-        // TODO: mostrar los consumibles del inventario, construir una
-        // UsarItem con el elegido y ejecutarla
+        String[] nombres = new String[consumibles.size()];
+        String[] sprites = new String[consumibles.size()];
+        for (int i = 0; i < consumibles.size(); i++) {
+            nombres[i] = consumibles.get(i).getNombre();
+            sprites[i] = "pocion_vida.png";
+        }
+
+        Object elegidoItem = DialogoEleccion.mostrar(
+            vista, "Elegir ítem", "¿Qué ítem usás?", nombres, sprites
+        );
+        if (elegidoItem == null) return;
+
+        int idx = -1;
+        for (int i = 0; i < nombres.length; i++) {
+            if (nombres[i].equals(elegidoItem)) { idx = i; break; }
+        }
+        if (idx < 0) return;
+        Consumible consumible = consumibles.get(idx);
+
+        Object elegidoPersonaje = DialogoEleccion.mostrar(
+            vista, "Elegir personaje", "¿Sobre qué personaje?",
+            party.integrantesVivos().toArray()
+        );
+        if (elegidoPersonaje == null) return;
+
+        Personaje personaje = (Personaje) elegidoPersonaje;
+        int vidaAntes = personaje.getVidaActual();
+        consumible.usarItem(personaje);
+        party.getInventario().quitarItem(consumible);
+        int vidaRecuperada = personaje.getVidaActual() - vidaAntes;
+
+        mensaje = batalla.turnoActual().getNombre() + " uso " + consumible.getNombre()
+                + " sobre " + personaje.getNombre() + " recuperando " + vidaRecuperada + "Hp\n";
+        batalla.avanzarTurno();
+        jugarTurnosEnemigos();
+        if (batalla.batallaTermino() && batalla.ganadorDeBatalla()) {
+            siguienteBatalla();
+            return;
+        }
         refrescarVista();
     }
+    
+    private void mostrarDerrota() {
+        PantallaDerrota derrota = new PantallaDerrota(
+            numeroBatalla,
+            () -> {
+                numeroBatalla = 1;
+                oroGanado = 0;
+                oroGastado = 0;
+                enemigosDerrota = 0;
+                muertesParty = 0;
+                party.setOro(0);
+
+                for (Personaje p : party.getIntegrantes()) {
+                    p.curar(p.getVidaMaxima());
+                    p.restaurarMana();
+                }
+
+                List<Enemigo> nuevos = generador.generarEnemigos(1);
+                batalla = new Batalla(party, nuevos);
+                batalla.iniciar();
+                mensaje = "Batalla 1 comienza\n";
+                jugarTurnosEnemigos();
+                refrescarVista();
+            },
+            () -> System.exit(0)
+        );
+        derrota.setVisible(true);
+    }
+    
 
     // ------------------------------------------------------------
     // Modelo -> DTO -> vista
@@ -251,7 +419,7 @@ public class ControladorBatalla {
         
 
         return new EstadoBatallaDTO(
-            1,
+        	numeroBatalla,
             personajes,
             enemigos,
             batalla.turnoActual().getNombre(),
@@ -260,22 +428,28 @@ public class ControladorBatalla {
             batalla.ganadorDeBatalla()
         );
     }
-     private EntidadDTO convertirEntidad(Entidad entidad, String sprite) {
-          List<String> estados = new ArrayList<>();
-          // recorrer los efectos de estado activos y agregar sus nombres
+    private EntidadDTO convertirEntidad(Entidad entidad, String sprite) {
+        List<String> estados = entidad.mostrarNombreEstados();
+        String spriteNombre = entidad.getNombre().toLowerCase() + ".png";
+
+        int bonoAtq = 0, bonoDef = 0, bonoVel = 0;
+        if (entidad instanceof Personaje) {
+            Personaje p = (Personaje) entidad;
+            for (modelo.items.Equipable eq : p.getEquipo()) {
+                bonoAtq += eq.getBonoAtaque();
+                bonoDef += eq.getBonoDefensa();
+                bonoVel += eq.getBonoVelocidad();
+            }
+        }
+
+        return new EntidadDTO(
+            entidad.getNombre(), entidad.getNivel(),
+            entidad.getVidaActual(), entidad.getVidaMaxima(),
+            entidad.getManaActual(), entidad.getManaMaximo(),
+            entidad.getAtaque(), entidad.getDefensa(), entidad.getVelocidad(),
+            estados, spriteNombre,
+            bonoAtq, bonoDef, bonoVel
+        );
+    }
      
-          return new EntidadDTO(
-              entidad.getNombre(),
-              entidad.getNivel(),
-              entidad.getVidaActual(),
-              entidad.getVidaMaxima(),
-              entidad.getManaActual(),
-              entidad.getManaMaximo(),
-             entidad.getAtaque(),
-              entidad.getDefensa(),
-              entidad.getVelocidad(),
-              estados,
-              sprite
-         );
-      }
 }

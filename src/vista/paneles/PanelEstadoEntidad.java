@@ -1,135 +1,120 @@
 package vista.paneles;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
-
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingConstants;
-
+import java.awt.*;
+import javax.swing.*;
 import dto.EntidadDTO;
+import util.CargadorImagenes;
 
-/**
- * Ficha de una entidad: nombre, nivel, barras de vida y mana,
- * estadisticas y efectos de estado activos.
- *
- * Se usa tanto para personajes como para enemigos, porque recibe
- * un EntidadDTO y no le importa de que clase del modelo provino.
- */
 public class PanelEstadoEntidad extends JPanel {
-
     private static final long serialVersionUID = 1L;
-
     private final JLabel lblNombre;
     private final JProgressBar barraVida;
     private final JProgressBar barraMana;
     private final JLabel lblEstadisticas;
     private final JLabel lblEstados;
+    private final JLabel lblSprite;
 
     public PanelEstadoEntidad() {
+        setLayout(new BorderLayout(6, 4));
+        setBackground(new Color(20, 15, 30));
+        setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(80, 60, 120), 2),
+            BorderFactory.createEmptyBorder(6, 6, 6, 6)
+        ));
 
-        setLayout(new BorderLayout(4, 4));
+        lblSprite = new JLabel("", SwingConstants.CENTER);
+        lblSprite.setPreferredSize(new Dimension(70, 70));
+        lblSprite.setFont(new Font("Monospaced", Font.BOLD, 28));
+        lblSprite.setForeground(new Color(120, 100, 160));
 
-        setBorder(
-            BorderFactory.createEtchedBorder()
-        );
-
-        lblNombre =
-            new JLabel("-", SwingConstants.CENTER);
-
-        lblNombre.setFont(
-            new Font("SansSerif", Font.BOLD, 14)
-        );
+        lblNombre = new JLabel("-", SwingConstants.CENTER);
+        lblNombre.setFont(new Font("Monospaced", Font.BOLD, 11));
+        lblNombre.setForeground(new Color(230, 210, 170));
 
         barraVida = new JProgressBar();
         barraVida.setStringPainted(true);
+        barraVida.setForeground(new Color(180, 30, 30));
+        barraVida.setBackground(new Color(40, 20, 20));
+        barraVida.setFont(new Font("Monospaced", Font.BOLD, 9));
 
         barraMana = new JProgressBar();
         barraMana.setStringPainted(true);
+        barraMana.setForeground(new Color(30, 80, 180));
+        barraMana.setBackground(new Color(20, 20, 40));
+        barraMana.setFont(new Font("Monospaced", Font.BOLD, 9));
 
-        lblEstadisticas =
-            new JLabel("-", SwingConstants.CENTER);
+        lblEstadisticas = new JLabel("-", SwingConstants.CENTER);
+        lblEstadisticas.setForeground(new Color(170, 170, 190));
+        lblEstadisticas.setFont(new Font("Monospaced", Font.PLAIN, 9));
 
-        lblEstados =
-            new JLabel(" ", SwingConstants.CENTER);
+        lblEstados = new JLabel(" ", SwingConstants.CENTER);
+        lblEstados.setForeground(new Color(255, 180, 50));
+        lblEstados.setFont(new Font("Monospaced", Font.ITALIC, 9));
 
-        JPanel datos =
-            new JPanel(new GridLayout(5, 1, 2, 2));
-
+        JPanel datos = new JPanel(new GridLayout(6, 1, 2, 2));
+        datos.setOpaque(false);
         datos.add(lblNombre);
         datos.add(barraVida);
         datos.add(barraMana);
         datos.add(lblEstadisticas);
         datos.add(lblEstados);
+        datos.add(new JLabel(""));
 
-        add(datos, BorderLayout.NORTH);
+        add(lblSprite, BorderLayout.WEST);
+        add(datos, BorderLayout.CENTER);
     }
 
-    public void actualizar(
-            EntidadDTO entidad) {
+    public void actualizar(EntidadDTO entidad) {
+        lblNombre.setText(entidad.getNombre() + " Nv." + entidad.getNivel());
 
-        lblNombre.setText(
-            entidad.getNombre()
-            + " Nv."
-            + entidad.getNivel()
-        );
+        int vidaMostrar = Math.max(0, entidad.getVidaActual());
+        barraVida.setMaximum(Math.max(1, entidad.getVidaMaxima()));
+        barraVida.setValue(vidaMostrar);
+        barraVida.setString(vidaMostrar + "Hp/" + entidad.getVidaMaxima() + "Hp");
 
-        barraVida.setMaximum(entidad.getVidaMaxima());
-        barraVida.setValue(entidad.getVidaActual());
+        barraMana.setMaximum(Math.max(1, entidad.getManaMaximo()));
+        barraMana.setValue(Math.max(0, entidad.getManaActual()));
+        barraMana.setString(entidad.getManaActual() + "Ma/" + entidad.getManaMaximo() + "Ma");
 
-        barraVida.setString(
-            "HP "
-            + entidad.getVidaActual()
-            + " / "
-            + entidad.getVidaMaxima()
-        );
+        String atq = "ATQ " + entidad.getAtaque();
+        if (entidad.getBonoAtaque() != 0) atq += (entidad.getBonoAtaque() > 0 ? "+" : "") + entidad.getBonoAtaque();
 
-        barraMana.setMaximum(entidad.getManaMaximo());
-        barraMana.setValue(entidad.getManaActual());
+        String def = "DEF " + entidad.getDefensa();
+        if (entidad.getBonoDefensa() != 0) def += (entidad.getBonoDefensa() > 0 ? "+" : "") + entidad.getBonoDefensa();
 
-        barraMana.setString(
-            "MP "
-            + entidad.getManaActual()
-            + " / "
-            + entidad.getManaMaximo()
-        );
+        String vel = "VEL " + entidad.getVelocidad();
+        if (entidad.getBonoVelocidad() != 0) vel += (entidad.getBonoVelocidad() > 0 ? "+" : "") + entidad.getBonoVelocidad();
 
-        lblEstadisticas.setText(
-            "ATQ " + entidad.getAtaque()
-            + " | DEF " + entidad.getDefensa()
-            + " | VEL " + entidad.getVelocidad()
-        );
+        lblEstadisticas.setText(atq + " " + def + " " + vel);
 
-        if (entidad.getEstados() == null
-                || entidad.getEstados().isEmpty()) {
-
+        if (entidad.getEstados() == null || entidad.getEstados().isEmpty()) {
             lblEstados.setText(" ");
-
         } else {
+            lblEstados.setText(String.join(", ", entidad.getEstados()));
+        }
 
-            lblEstados.setText(
-                String.join(", ", entidad.getEstados())
-            );
+        ImageIcon icono = CargadorImagenes.cargar(entidad.getSprite());
+        if (icono != null) {
+            Image img = icono.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+            lblSprite.setIcon(new ImageIcon(img));
+            lblSprite.setText(null);
+        } else {
+            lblSprite.setIcon(null);
+            lblSprite.setText(entidad.getNombre().substring(0, 2));
         }
     }
 
-    public void marcarEnTurno(
-            boolean enTurno) {
-
+    public void marcarEnTurno(boolean enTurno) {
         if (enTurno) {
-            setBorder(
-                BorderFactory.createLineBorder(
-                    java.awt.Color.ORANGE,
-                    2
-                )
-            );
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 200, 0), 3),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            ));
         } else {
-            setBorder(
-                BorderFactory.createEtchedBorder()
-            );
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(80, 60, 120), 2),
+                BorderFactory.createEmptyBorder(6, 6, 6, 6)
+            ));
         }
     }
 }

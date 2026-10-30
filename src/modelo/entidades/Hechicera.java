@@ -25,6 +25,9 @@ public class Hechicera extends Enemigo {
 	// de modo que el enemigo decida ambas cosas de una sola vez.
 	@Override
 	public Accion decidirAccion(List<Personaje> personajes, List<Enemigo> enemigos) {
+		if (getHabilidad().isEmpty()) {
+		    return new Atacar();
+		}
 		return new UsarHabilidad(getHabilidad().get(0), List.of(elegirObjetivo(personajes, enemigos)));
 	}
 	
