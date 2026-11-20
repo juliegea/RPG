@@ -1,9 +1,9 @@
 package modelo.combate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import modelo.entidades.Enemigo;
 import modelo.entidades.Personaje;
 import modelo.items.Inventario;
 
@@ -13,9 +13,12 @@ public class Party {
 	private int oroTotal;
 	
 	public Party(List<Personaje> personajes) {
-		this.personajes = personajes;
-		this.oroTotal = 0;
-		this.inventario = new Inventario(new ArrayList<>());
+	    if (personajes.size() < 1 || personajes.size() > 4) {
+	        throw new IllegalArgumentException("La party debe tener entre 1 y 4 integrantes");
+	    }
+	    this.personajes = personajes;
+	    this.oroTotal = 0;
+	    this.inventario = new Inventario(new ArrayList<>());
 	}
 	
 	public boolean partyDerrotada() {
@@ -57,7 +60,7 @@ public class Party {
 	}
 	
 	public List<Personaje> getIntegrantes() {
-		return personajes;
+		return Collections.unmodifiableList(personajes);
 	}
 
 }

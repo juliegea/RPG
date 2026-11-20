@@ -76,10 +76,13 @@ public class PantallaMercado extends JFrame {
                     sprite = "pocion_vida.png";
                 } else {
                     Equipable eq = (Equipable) item;
-                    if (eq.getParteDelCuerpo() == ParteDelCuerpo.ARMADURA) {
-                        sprite = "armadura.png";
-                    } else {
-                        sprite = "espada.png";
+                    switch (eq.getParteDelCuerpo()) {
+                    	case ARMADURA: sprite = "armadura.png"; break;
+                    	case CASCO: sprite = "casco de acero.png"; break;
+                    	case ESCUDO: sprite = "escudo de batalla.png"; break;
+                    	case BOTAS: sprite = "botas de cuero.png"; break;
+                    	case ACCESORIO: sprite = "anillo arcano.png"; break;
+                    	default: sprite = "espada.png"; break;
                     }
                 }
                 ImageIcon ic = CargadorImagenes.cargar(sprite);
@@ -137,10 +140,13 @@ public class PantallaMercado extends JFrame {
                     sprites[i] = "pocion_vida.png";
                 } else {
                     Equipable eq = (Equipable) inv.get(i);
-                    if (eq.getParteDelCuerpo() == ParteDelCuerpo.ARMADURA) {
-                        sprites[i] = "armadura.png";
-                    } else {
-                        sprites[i] = "espada.png";
+                    switch (eq.getParteDelCuerpo()) {
+                		case ARMADURA: sprites[i] = "armadura.png"; break;
+                		case CASCO: sprites[i] = "casco de acero.png"; break;
+                		case ESCUDO: sprites[i] = "escudo de batalla.png"; break;
+                		case BOTAS: sprites[i] = "botas de cuero.png"; break;
+                		case ACCESORIO: sprites[i] = "anillo arcano.png"; break;
+                		default: sprites[i] = "espada.png"; break;
                     }
                 }
             }

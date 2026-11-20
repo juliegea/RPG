@@ -1,6 +1,7 @@
 package modelo.items;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Inventario {
@@ -19,7 +20,7 @@ public class Inventario {
 	}
 	
 	public List<Item> verInventario() {
-		return items;
+		return Collections.unmodifiableList(items);
 	}
 	
 	public List<Consumible> filtrarConsumible() {

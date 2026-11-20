@@ -6,6 +6,7 @@ import modelo.habilidades.EfectoDeEstado;
 import modelo.habilidades.Habilidad;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public abstract class Entidad {
 	private String nombre;
@@ -59,7 +60,7 @@ public abstract class Entidad {
 	}
 	
 	public List<Habilidad> getHabilidad() {
-		return habilidades;
+		return Collections.unmodifiableList(habilidades);
 	}
 
 	public Entidad(String nombre, int nivel, int vidaMaxima, int manaMaximo, int ataque, int defensa, int velocidad) {
@@ -130,10 +131,13 @@ public abstract class Entidad {
 	}
 
 	public int usarHabilidad(Habilidad habilidad, List<Entidad> objetivos) {
-		if (consumirMana(habilidad.getCostoMana())) {
-			return habilidad.aplicarHabilidad(this, objetivos);
-		}
-		return 0;
+	    if (!habilidades.contains(habilidad)) {
+	        return 0;
+	    }
+	    if (consumirMana(habilidad.getCostoMana())) {
+	        return habilidad.aplicarHabilidad(this, objetivos);
+	    }
+	    return 0;
 	}
 
 	protected int defensaEfectiva() {

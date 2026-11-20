@@ -12,7 +12,6 @@ public class Batalla {
 	private final Party party;
 	private final List<Enemigo> enemigos;
 	private final List<Entidad> turnos;
-	private boolean batallaTerminada;
 	private boolean ganadorBatalla;
 	private int posicionActual;
 	
@@ -20,7 +19,6 @@ public class Batalla {
 		this.party = party;
 		this.enemigos = enemigos;
 		this.turnos = new ArrayList<>();
-		this.batallaTerminada = false;
 		this.ganadorBatalla = false;
 		this.posicionActual = 0;
 	}
@@ -59,12 +57,10 @@ public class Batalla {
 	public boolean batallaTermino() {
 		if (party.partyDerrotada()) {
 			ganadorBatalla = false;
-			batallaTerminada = true;
 			return true;
 		}
 		if (!quedanEnemigosVivos()) {
 			ganadorBatalla = true;
-			batallaTerminada = true;
 			return true;
 		}
 		return false;
@@ -75,6 +71,9 @@ public class Batalla {
 	}
 	
 	public int ejecutarAccion(Accion accion, Entidad objetivo) {
+	    if (objetivo != null && !objetivo.estaViva()) {
+	        return 0;
+	    }
 	    return accion.aplicarAccion(turnoActual(), objetivo);
 	}
 	

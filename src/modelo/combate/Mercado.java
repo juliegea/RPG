@@ -29,6 +29,9 @@ public class Mercado {
     }
 
     public void venderItem(Item item, Party party) {
+        if (!party.getInventario().verInventario().contains(item)) {
+            return;
+        }
         party.sumarOro(item.precioDeVenta());
         party.getInventario().quitarItem(item);
     }

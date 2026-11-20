@@ -170,7 +170,14 @@ public class PantallaEquipamiento extends JFrame {
             for (int i = 0; i < equipables.size(); i++) {
                 Equipable eq = equipables.get(i);
                 nombres[i] = eq.getNombre() + " (" + eq.getParteDelCuerpo() + ")";
-                sprites[i] = eq.getParteDelCuerpo() == ParteDelCuerpo.ARMADURA ? "armadura.png" : "espada.png";
+                switch (eq.getParteDelCuerpo()) {
+        			case ARMADURA: sprites[i] = "armadura.png"; break;
+        			case CASCO: sprites[i] = "casco de acero.png"; break;
+        			case ESCUDO: sprites[i] = "escudo de batalla.png"; break;
+        			case BOTAS: sprites[i] = "botas de cuero.png"; break;
+        			case ACCESORIO: sprites[i] = "anillo arcano.png"; break;
+        			default: sprites[i] = "espada.png"; break;
+                }
             }
 
             Object elegido = DialogoEleccion.mostrar(this, "Equipar",

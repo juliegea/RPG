@@ -8,6 +8,7 @@ import modelo.entidades.Demonio;
 import modelo.entidades.Elfo;
 import modelo.entidades.Enemigo;
 import modelo.entidades.Hechicera;
+import modelo.entidades.ReySinRostro;
 import modelo.habilidades.Curacion;
 import modelo.habilidades.Habilidad;
 import modelo.habilidades.TipoObjetivo;
@@ -45,6 +46,10 @@ public class GeneradorDeBatalla {
     			enemigos.add(new Demonio("Demonio", nivel, 280 * nivel, 120, 60 * nivel, 45 * nivel, 25, 100, 550));
     			enemigos.add(crearHechicera(nivel));
     			break;
+    		case 5:
+    		    enemigos.add(new ReySinRostro("Rey Sin Rostro", nivel, 800 * nivel, 300,
+    		            80 * nivel, 60 * nivel, 35, 500, 2000));
+    		    break;
     		default:
     			break;
 		}

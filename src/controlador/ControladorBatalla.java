@@ -3,8 +3,6 @@ package controlador;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
 import dto.EntidadDTO;
 import dto.EstadoBatallaDTO;
 import modelo.acciones.Accion;
@@ -13,7 +11,9 @@ import modelo.acciones.Defender;
 import modelo.acciones.UsarHabilidad;
 import modelo.combate.Batalla;
 import modelo.combate.GeneradorDeBatalla;
+import modelo.combate.GestorDeGuardado;
 import modelo.combate.Mercado;
+import modelo.combate.Partida;
 import modelo.combate.Party;
 import modelo.entidades.Enemigo;
 import modelo.entidades.Entidad;
@@ -21,6 +21,8 @@ import modelo.entidades.Personaje;
 import modelo.habilidades.Habilidad;
 import modelo.habilidades.TipoObjetivo;
 import modelo.items.Consumible;
+import modelo.items.Equipable;
+import modelo.items.Item;
 import vista.DialogoEleccion;
 import vista.PantallaBatalla;
 import vista.PantallaDerrota;
@@ -67,7 +69,7 @@ public class ControladorBatalla {
             p.restaurarMana();
         }
 
-        boolean esFinal = (numeroBatalla >= 4);
+        boolean esFinal = (numeroBatalla >= 5);
 
         PantallaVictoria victoria = new PantallaVictoria(
         	    numeroBatalla, party.getOro(), esFinal,
@@ -83,6 +85,7 @@ public class ControladorBatalla {
         	    },
         	    () -> new PantallaMercado(mercado, party).setVisible(true),
         	    () -> new PantallaEquipamiento(party).setVisible(true),
+        	    () -> guardarPartida(),
         	    () -> System.exit(0)
         	);
         victoria.setVisible(true);
@@ -152,10 +155,17 @@ public class ControladorBatalla {
     private void jugarTurnosEnemigos() {
         while (batalla.turnoActual() instanceof Enemigo && !batalla.batallaTermino()) {
             Enemigo enemigo = (Enemigo) batalla.turnoActual();
+            
+            // Guarda quiénes estaban vivos antes
+            List<Personaje> vivosAntes = new ArrayList<>();
+            for (Personaje p : party.getIntegrantes()) {
+                if (p.estaViva()) vivosAntes.add(p);
+            }
 
             Accion accion = enemigo.decidirAccion(party.getIntegrantes(), batalla.getEnemigo());
             Entidad objetivo = enemigo.elegirObjetivo(party.getIntegrantes(), batalla.getEnemigo());
             int danio = batalla.ejecutarAccion(accion, objetivo);
+            
             if (objetivo instanceof Enemigo) {
                 mensaje += "La " + batalla.turnoActual().getNombre() + " curo a " + objetivo.getNombre()
                         + " regenerandole " + danio + "Hp. Vida actual: " + objetivo.getVidaActual() + "Hp\n";
@@ -163,7 +173,9 @@ public class ControladorBatalla {
                 mensaje += "El " + batalla.turnoActual().getNombre() + " ataco a " + objetivo.getNombre()
                         + " realizandole " + danio + "Hp de daño. Vida restante: " + objetivo.getVidaActual() + "Hp\n";
             }
-            for (Personaje p : party.getIntegrantes()) {
+            
+            // Cuenta sólo los que murieron en este turno
+            for (Personaje p : vivosAntes) {
                 if (!p.estaViva()) muertesParty++;
             }
             
@@ -284,7 +296,6 @@ public class ControladorBatalla {
     	
     	for (Entidad o : vivosAntes) {
     	    if (!o.estaViva() && o instanceof Enemigo) {
-    	    	enemigosDerrota++;
     	        Enemigo muerto = (Enemigo) o;
     	        Personaje rematador = (Personaje) batalla.turnoActual();
     	        int nivelAntes = rematador.getNivel();
@@ -357,8 +368,12 @@ public class ControladorBatalla {
                 + " sobre " + personaje.getNombre() + " recuperando " + vidaRecuperada + "Hp\n";
         batalla.avanzarTurno();
         jugarTurnosEnemigos();
-        if (batalla.batallaTermino() && batalla.ganadorDeBatalla()) {
-            siguienteBatalla();
+        if (batalla.batallaTermino()) {
+            if (batalla.ganadorDeBatalla()) {
+                siguienteBatalla();
+            } else {
+                mostrarDerrota();
+            }
             return;
         }
         refrescarVista();
@@ -392,6 +407,53 @@ public class ControladorBatalla {
         derrota.setVisible(true);
     }
     
+    public boolean comprarItem(int indiceCatalogo) {
+        Item item = mercado.verCatalogo().get(indiceCatalogo);
+        return mercado.comprarItem(item, party);
+    }
+
+    public void venderItem(int indiceInventario) {
+        List<Item> inv = party.getInventario().verInventario();
+        if (indiceInventario >= 0 && indiceInventario < inv.size()) {
+            mercado.venderItem(inv.get(indiceInventario), party);
+        }
+    }
+
+    public void equiparItem(int indicePersonaje, int indiceEquipable) {
+        Personaje p = party.getIntegrantes().get(indicePersonaje);
+        List<Item> inv = party.getInventario().verInventario();
+        int count = 0;
+        for (Item item : inv) {
+            if (!item.esConsumible()) {
+                if (count == indiceEquipable) {
+                    Equipable eq = (Equipable) item;
+                    p.usarObjeto(eq);
+                    party.getInventario().quitarItem(eq);
+                    return;
+                }
+                count++;
+            }
+        }
+    }
+
+    public void desequiparItem(int indicePersonaje, int indiceEquipo) {
+        Personaje p = party.getIntegrantes().get(indicePersonaje);
+        if (indiceEquipo >= 0 && indiceEquipo < p.getEquipo().size()) {
+            Equipable eq = p.getEquipo().get(indiceEquipo);
+            p.desequiparObjeto(eq);
+            party.getInventario().agregarItem(eq);
+        }
+    }
+
+    public int getOro() { return party.getOro(); }
+    public List<String> getCatalogoTexto() {
+        List<String> nombres = new ArrayList<>();
+        for (Item item : mercado.verCatalogo()) {
+            nombres.add(item.getNombre() + " - " + item.getPrecio() + " oro");
+        }
+        return nombres;
+    }
+    
 
     // ------------------------------------------------------------
     // Modelo -> DTO -> vista
@@ -403,9 +465,6 @@ public class ControladorBatalla {
     }
 
     private EstadoBatallaDTO crearEstadoDTO() {
-
-        // TODO: reemplazar por los datos reales de batalla
-
         List<EntidadDTO> personajes = new ArrayList<>();
         List<EntidadDTO> enemigos = new ArrayList<>();
         
@@ -451,5 +510,55 @@ public class ControladorBatalla {
             bonoAtq, bonoDef, bonoVel
         );
     }
-     
+    
+    // ------------------------------------------------------------
+    // GUARDADO/CARGAR
+    // ------------------------------------------------------------
+    
+    public void guardarPartida() {
+        GestorDeGuardado gestor = new GestorDeGuardado();
+        List<Personaje> pjs = party.getIntegrantes();
+        int[] niveles = new int[pjs.size()];
+        int[] experiencias = new int[pjs.size()];
+        for (int i = 0; i < pjs.size(); i++) {
+            niveles[i] = pjs.get(i).getNivel();
+            experiencias[i] = pjs.get(i).getExperiencia();
+        }
+        Partida partida = new Partida(numeroBatalla + 1, party.getOro(),
+                niveles, experiencias, oroGanado, oroGastado, enemigosDerrota, muertesParty);
+        gestor.guardar(partida);
+    }
+    
+    public void aplicarPartidaCargada(Partida partida) {
+        this.numeroBatalla = partida.getNumeroBatalla();
+        this.oroGanado = partida.getOroGanado();
+        this.oroGastado = partida.getOroGastado();
+        this.enemigosDerrota = partida.getEnemigosDerrota();
+        this.muertesParty = partida.getMuertesParty();
+        party.setOro(partida.getOroTotal());
+
+        List<Personaje> pjs = party.getIntegrantes();
+        for (int i = 0; i < pjs.size(); i++) {
+            int nivelObjetivo = partida.getNiveles()[i];
+            while (pjs.get(i).getNivel() < nivelObjetivo) {
+                pjs.get(i).ganarExperiencia(50 * pjs.get(i).getNivel());
+            }
+        }
+
+        for (Personaje p : party.getIntegrantes()) {
+            p.curar(p.getVidaMaxima());
+            p.restaurarMana();
+        }
+
+        if (numeroBatalla > 5) {
+            numeroBatalla = 5;
+        }
+
+        List<Enemigo> enemigos = generador.generarEnemigos(numeroBatalla);
+        batalla = new Batalla(party, enemigos);
+        batalla.iniciar();
+        mensaje = "Partida cargada - Batalla " + numeroBatalla + "\n";
+        jugarTurnosEnemigos();
+        refrescarVista();
+    }
 }

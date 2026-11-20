@@ -7,7 +7,7 @@ import util.IconoOro;
 public class PantallaVictoria extends JFrame {
     public PantallaVictoria(int numeroBatalla, int oro, boolean esFinal,
             int enemigosDerrota, int muertesParty, int oroGanado, int oroGastado,
-            Runnable alSiguiente, Runnable alMercado, Runnable alEquipo, Runnable alSalir) {
+            Runnable alSiguiente, Runnable alMercado, Runnable alEquipo, Runnable alGuardar, Runnable alSalir) {
 
         setTitle(esFinal ? "Juego Completado" : "Victoria");
         setSize(480, 550);
@@ -82,6 +82,14 @@ public class PantallaVictoria extends JFrame {
             contenido.add(btnEquipo, gbc);
             btnEquipo.addActionListener(e -> alEquipo.run());
         }
+        
+        JButton btnGuardar = crearBoton("Guardar partida");
+        gbc.gridy++;
+        contenido.add(btnGuardar, gbc);
+        btnGuardar.addActionListener(e -> {
+            alGuardar.run();
+            JOptionPane.showMessageDialog(this, "Partida guardada");
+        });
 
         gbc.insets = new Insets(5, 15, 15, 15);
         JButton btnSalir = crearBoton(esFinal ? "Cerrar juego" : "Salir");

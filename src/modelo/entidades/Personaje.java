@@ -1,10 +1,10 @@
 package modelo.entidades;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import modelo.items.Equipable;
-import modelo.items.Item;
 
 public abstract class Personaje extends Entidad {
 	
@@ -27,8 +27,14 @@ public abstract class Personaje extends Entidad {
 		
 	}
 	
-	public void usarObjeto(Equipable equipo) {
-	    this.equipo.add(equipo);
+	public void usarObjeto(Equipable nuevo) {
+	    for (int i = 0; i < equipo.size(); i++) {
+	        if (equipo.get(i).getParteDelCuerpo() == nuevo.getParteDelCuerpo()) {
+	            equipo.remove(i);
+	            break;
+	        }
+	    }
+	    equipo.add(nuevo);
 	}
 
 	public void desequiparObjeto(Equipable equipo) {
@@ -36,7 +42,7 @@ public abstract class Personaje extends Entidad {
 	}
 
 	public List<Equipable> getEquipo() {
-	    return equipo;
+		return Collections.unmodifiableList(equipo);
 	}
 	
 	private void subirNivel() {
@@ -73,4 +79,21 @@ public abstract class Personaje extends Entidad {
 	    return total;
 	}
 	
+	@Override
+	public int getVelocidad() {
+	    int total = velocidad;
+	    for (Equipable e : equipo) {
+	        total += e.getBonoVelocidad();
+	    }
+	    return total;
+	}
+
+	@Override
+	public int getVidaMaxima() {
+	    int total = vidaMaxima;
+	    for (Equipable e : equipo) {
+	        total += e.getBonoVida();
+	    }
+	    return total;
+	}
 }
