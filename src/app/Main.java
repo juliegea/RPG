@@ -39,7 +39,7 @@ public class Main {
 
 	    guerrero.agregarHabilidad(new Habilidad("Golpe contra el piso", 30, 3, TipoObjetivo.ENEMIGO, new Danio(45)));
 	    mago.agregarHabilidad(new Habilidad("Descarga Arcana", 40, 1, TipoObjetivo.ENEMIGO, new Danio(80)));
-	    mago.agregarHabilidad(new Habilidad("Agujero Negro", 10, 4, TipoObjetivo.ENEMIGO, new Danio(5000)));
+	    mago.agregarHabilidad(new Habilidad("Agujero Negro", 160, 4, TipoObjetivo.ENEMIGO, new Danio(200)));
 	    arquero.agregarHabilidad(new Habilidad("Flecha de acero", 30, 1, TipoObjetivo.ENEMIGO, new Danio(70)));
 	    arquero.agregarHabilidad(new Habilidad("Cacería", 70, 3, TipoObjetivo.ENEMIGO, new Danio(60)));
 	    arquero.agregarHabilidad(new Habilidad("Flecha de Serpiente", 50, 1, TipoObjetivo.ENEMIGO,
