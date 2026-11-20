@@ -1,11 +1,4 @@
-# ⚔️ RPG por Turnos — TPO POO
-
-**Materia:** Programación Orientada a Objetos  
-**Universidad:** UADE  
-**Alumno:** Julián Egea
-
----
-
+# ⚔️ RPG por Turnos
 ## Descripción
 
 Juego RPG por turnos desarrollado en Java con interfaz gráfica Swing. El jugador controla un party de 4 personajes (Guerrero, Mago, Arquero, Curador) a través de 5 batallas contra enemigos generados progresivamente, culminando en un jefe final: el Rey sin Rostro.
